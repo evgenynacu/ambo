@@ -7,7 +7,7 @@ import android.support.v7.widget.{GridLayoutManager, RecyclerView}
 import android.view.ViewGroup
 import android.widget.TextView
 
-class MainActivity extends Activity{
+class MainActivity extends Activity {
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
 
