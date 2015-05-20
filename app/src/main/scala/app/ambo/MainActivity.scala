@@ -1,37 +1,34 @@
 package app.ambo
 
-import android.app.Activity
+import android.app.LoaderManager.LoaderCallbacks
+import android.content.{AsyncTaskLoader, Loader}
 import android.os.Bundle
-import android.support.v7.widget.RecyclerView.Adapter
-import android.support.v7.widget.{GridLayoutManager, RecyclerView}
-import android.view.ViewGroup
-import android.widget.TextView
+import android.util.Log
+import reactive.Observing
+import reactive.android.app.ReactiveActivity
 
-class MainActivity extends Activity{
-
-  override def onCreate(savedInstanceState: Bundle): Unit = {
-
-    super.onCreate(savedInstanceState)
-
-    setContentView(R.layout.main)
-
-    val lm = new GridLayoutManager(this, 2)
-    val rv = findViewById(R.id.rv).asInstanceOf[RecyclerView]
-    rv.setLayoutManager(lm)
-    rv.setAdapter(new Adapter[ViewHolder] {
-      override def getItemCount: Int = 7
-
-      override def onBindViewHolder(holder: ViewHolder, position: Int): Unit = {
-        holder.view.setText("Number " + position)
+class MainActivity extends ReactiveActivity with Observing {
+  for (e <- eCreate) {
+    getLoaderManager.initLoader(1, null, new LoaderCallbacks[Unit] {
+      def onLoaderReset(loader: Loader[Unit]) = {
+        Log.i("TEST", "onLoaderReset")
       }
 
-      override def onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = {
-        new ViewHolder(new TextView(MainActivity.this))
+      def onLoadFinished(loader: Loader[Unit], data: Unit) = {
+        Log.i("TEST", "onLoadFinished")
+      }
+
+      def onCreateLoader(id: Int, args: Bundle) = {
+        Log.i("TEST", "onCreateLoader")
+        new AsyncTaskLoader[Unit](MainActivity.this) {
+
+
+          def loadInBackground() = {
+            Log.i("TEST", "loadInBackground")
+            ()
+          }
+        }
       }
     })
   }
-}
-
-class ViewHolder(val view: TextView) extends RecyclerView.ViewHolder(view) {
-
 }
