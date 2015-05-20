@@ -91,7 +91,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <executable>${ANDROID_HOME}/build-tools/21.1.1/zipalign</executable>
+                            <executable>${ANDROID_HOME}/build-tools/22.0.1/zipalign</executable>
                             <arguments>
                                 <argument>-f</argument>
                                 <argument>4</argument>
