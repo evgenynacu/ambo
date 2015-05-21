@@ -1,34 +1,32 @@
 package app.ambo
 
-import android.app.LoaderManager.LoaderCallbacks
-import android.content.{AsyncTaskLoader, Loader}
-import android.os.Bundle
-import android.util.Log
-import reactive.Observing
+import android.database.Cursor
+import android.provider.ContactsContract.Contacts
+import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
+import android.view.ViewGroup
+import android.widget.TextView
+import app.ambo.adapter.{AdapterRenderer, SignalSeqAdapter}
 import reactive.android.app.ReactiveActivity
+import reactive.android.content.{ContentDescriptor, CursorSignal, RichCursor}
+import reactive.{Observing, Val}
 
 class MainActivity extends ReactiveActivity with Observing {
+  lazy val rv = findViewById(R.id.rv).asInstanceOf[RecyclerView]
+  val descriptor = ContentDescriptor(Contacts.CONTENT_URI, Array("display_name"), null, null)
+  lazy val signal = new CursorSignal(Val(descriptor), this, 0, getLoaderManager).map(_.map(c => RichCursor.cursorToRich(c)))
+
   for (e <- eCreate) {
-    getLoaderManager.initLoader(1, null, new LoaderCallbacks[Unit] {
-      def onLoaderReset(loader: Loader[Unit]) = {
-        Log.i("TEST", "onLoaderReset")
-      }
+    setContentView(R.layout.main)
+    rv.setLayoutManager(new LinearLayoutManager(this))
+    rv.setAdapter(new SignalSeqAdapter[Cursor, ViewHolder](signal, renderer))
+  }
 
-      def onLoadFinished(loader: Loader[Unit], data: Unit) = {
-        Log.i("TEST", "onLoadFinished")
-      }
+  object renderer extends AdapterRenderer[Cursor, ViewHolder] {
+    def onBindViewHolder(holder: ViewHolder, value: Cursor) = holder.tv.setText(value.getString(0))
 
-      def onCreateLoader(id: Int, args: Bundle) = {
-        Log.i("TEST", "onCreateLoader")
-        new AsyncTaskLoader[Unit](MainActivity.this) {
-
-
-          def loadInBackground() = {
-            Log.i("TEST", "loadInBackground")
-            ()
-          }
-        }
-      }
-    })
+    def onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(new TextView(MainActivity.this))
   }
 }
+
+case class ViewHolder(tv: TextView) extends RecyclerView.ViewHolder(tv)
+
