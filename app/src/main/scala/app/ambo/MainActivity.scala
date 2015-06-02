@@ -1,37 +1,32 @@
 package app.ambo
 
-import android.app.Activity
-import android.os.Bundle
-import android.support.v7.widget.RecyclerView.Adapter
-import android.support.v7.widget.{GridLayoutManager, RecyclerView}
+import android.database.Cursor
+import android.provider.ContactsContract.Contacts
+import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
 import android.view.ViewGroup
 import android.widget.TextView
+import app.ambo.adapter.{AdapterRenderer, SignalSeqAdapter}
+import reactive.android.app.ReactiveActivity
+import reactive.android.content.{ContentDescriptor, CursorSignal, RichCursor}
+import reactive.{Observing, Val}
 
-class MainActivity extends Activity {
+class MainActivity extends ReactiveActivity with Observing {
+  lazy val rv = findViewById(R.id.rv).asInstanceOf[RecyclerView]
+  val descriptor = ContentDescriptor(Contacts.CONTENT_URI, Array("display_name"), null, null)
+  lazy val signal = new CursorSignal(Val(descriptor), this, 0, getLoaderManager).map(_.map(c => RichCursor.cursorToRich(c)))
 
-  override def onCreate(savedInstanceState: Bundle): Unit = {
-
-    super.onCreate(savedInstanceState)
-
+  for (e <- eCreate) {
     setContentView(R.layout.main)
+    rv.setLayoutManager(new LinearLayoutManager(this))
+    rv.setAdapter(new SignalSeqAdapter[Cursor, ViewHolder](signal, renderer))
+  }
 
-    val lm = new GridLayoutManager(this, 2)
-    val rv = findViewById(R.id.rv).asInstanceOf[RecyclerView]
-    rv.setLayoutManager(lm)
-    rv.setAdapter(new Adapter[ViewHolder] {
-      override def getItemCount: Int = 7
+  object renderer extends AdapterRenderer[Cursor, ViewHolder] {
+    def onBindViewHolder(holder: ViewHolder, value: Cursor) = holder.tv.setText(value.getString(0))
 
-      override def onBindViewHolder(holder: ViewHolder, position: Int): Unit = {
-        holder.view.setText("Number " + position)
-      }
-
-      override def onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = {
-        new ViewHolder(new TextView(MainActivity.this))
-      }
-    })
+    def onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(new TextView(MainActivity.this))
   }
 }
 
-class ViewHolder(val view: TextView) extends RecyclerView.ViewHolder(view) {
+case class ViewHolder(tv: TextView) extends RecyclerView.ViewHolder(tv)
 
-}
